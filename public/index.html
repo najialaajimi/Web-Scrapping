@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Search</title>
+    <style>
+        /* Styles pour la mise en page générale */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* Styles pour le conteneur des cartes de produits */
+        #resultsContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            width: 250px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            background-color: #fff;
+        }
+
+        .product-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .product-card h3 {
+            font-size: 18px;
+            margin: 12px 0;
+        }
+
+        .product-card p {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .product-card a {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .product-card a:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styles pour le formulaire de recherche */
+        #searchForm {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #searchForm input {
+            padding: 8px;
+            font-size: 16px;
+            width: 300px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #searchForm button {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        #searchForm button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Product Search</h1>
+</header>
+
+<!-- Formulaire de recherche -->
+<div id="searchForm">
+    <input type="text" id="productName" placeholder="Enter product name...">
+    <button onclick="searchProduct()">Search</button>
+</div>
+
+<h2>Search Results</h2>
+
+<!-- Conteneur pour afficher les résultats sous forme de cartes -->
+<div id="resultsContainer"></div>
+
+<script>
+    async function searchProduct() {
+        const productName = document.getElementById('productName').value;
+        if (!productName) {
+            alert('Please enter a product name!');
+            return;
+        }
+
+        const response = await fetch(`http://localhost:5000/api/products/search?name=${encodeURIComponent(productName)}`);
+
+        if (!response.ok) {
+            alert('Error fetching product data');
+            return;
+        }
+
+        const products = await response.json();
+        console.log("Received products:", products); // Afficher les données reçues
+        displayResults(products);
+    }
+
+    function displayResults(products) {
+        const resultsContainer = document.getElementById('resultsContainer');
+        resultsContainer.innerHTML = ''; // Efface les anciens résultats
+
+        if (!Array.isArray(products)) {
+            console.error('Expected an array but got:', products);
+            return;
+        }
+
+        products.forEach(product => {
+            // Créer une carte pour chaque produit
+            const productCard = document.createElement('div');
+            productCard.classList.add('product-card');
+
+            // Ajouter l'image du produit
+            const productImage = document.createElement('img');
+            productImage.src = product['Image URL'];
+            productImage.alt = product.Name;
+            productCard.appendChild(productImage);
+
+            // Ajouter le nom du produit
+            const productName = document.createElement('h3');
+            productName.textContent = product.Name;
+            productCard.appendChild(productName);
+
+            // Ajouter le prix
+            const productPrice = document.createElement('p');
+            productPrice.textContent = `Price: ${product.Price}`;
+            productCard.appendChild(productPrice);
+
+            // Ajouter la disponibilité
+            const productAvailability = document.createElement('p');
+            productAvailability.textContent = `Availability: ${product.Availability}`;
+            productCard.appendChild(productAvailability);
+
+            // Vérifier si l'URL du produit est valide
+            if (product.URL && product.URL.startsWith('http')) {
+                // Ajouter un lien vers la page du produit
+                const productLink = document.createElement('a');
+                productLink.href = product.URL;
+                productLink.target = "_blank";
+                productLink.textContent = 'View Product';
+                productCard.appendChild(productLink);
+            } else {
+                const errorMessage = document.createElement('p');
+                errorMessage.textContent = 'URL is not valid or missing!';
+                productCard.appendChild(errorMessage);
+            }
+
+            // Ajouter la carte au conteneur des résultats
+            resultsContainer.appendChild(productCard);
+        });
+    }
+</script>
+
+</body>
+</html>
